@@ -74,13 +74,83 @@ Then create the template files:
 
 ```xml
 <!-- EXT:myextensionkey/Resource/Private/Templates/CoreContent/Text.html -->
-The text: {record.bodytext}
+<div xmlns:flux="http://typo3.org/ns/FluidTYPO3/Flux/ViewHelpers" flux:schemaLocation="http://fluidtypo3.org/schemas/flux-development.xsd"
+     xmlns:fcc="http://typo3.org/ns/FluidTYPO3/FluidcontentCore/ViewHelpers" fcc:schemaLocation="http://fluidtypo3.org/schemas/fluidcontent_core-development.xsd"
+     xmlns:v="http://typo3.org/ns/FluidTYPO3/Vhs/ViewHelpers" v:schemaLocation="http://fluidtypo3.org/schemas/vhs-development.xsd"
+     xmlns:f="http://typo3.org/ns/fluid/ViewHelpers" f:schemaLocation="http://fluidtypo3.org/schemas/fluid-master.xsd">
+
+<f:layout name="Default" />
+
+<f:section name="Configuration">
+	<flux:form id="text">
+		<f:render partial="Properties/Header" arguments="{_all}" />
+		<f:render partial="Properties/Container" arguments="{_all}" />
+	</flux:form>
+</f:section>
+
+<f:section name="Preview">
+	{record.bodytext -> f:format.crop(maxCharacters: 100)}
+</f:section>
+
+<f:section name="Main">
+	The text: {record.bodytext}
+</f:section>
+
+</div>
 ```
 
 ```xml
 <!-- EXT:myextensionkey/Resource/Private/Templates/CoreContent/Image.html -->
-My custom images:
-<!-- some custom rendering of images -->
+<div xmlns:flux="http://typo3.org/ns/FluidTYPO3/Flux/ViewHelpers" flux:schemaLocation="http://fluidtypo3.org/schemas/flux-development.xsd"
+     xmlns:fcc="http://typo3.org/ns/FluidTYPO3/FluidcontentCore/ViewHelpers" fcc:schemaLocation="http://fluidtypo3.org/schemas/fluidcontent_core-development.xsd"
+     xmlns:v="http://typo3.org/ns/FluidTYPO3/Vhs/ViewHelpers" v:schemaLocation="http://fluidtypo3.org/schemas/vhs-development.xsd"
+     xmlns:f="http://typo3.org/ns/fluid/ViewHelpers" f:schemaLocation="http://fluidtypo3.org/schemas/fluid-master.xsd">
+
+<f:layout name="Default" />
+
+<f:section name="Configuration">
+	<flux:form id="image">
+		<f:render partial="Properties/Header" arguments="{_all}" />
+		<f:render partial="Properties/Container" arguments="{_all}" />
+		<f:render partial="Properties/Images" arguments="{_all}" />
+		<f:if condition="{settings.extendedCaptions}">
+			<flux:grid>
+				<v:resource.record.fal record="{record}" field="image" table="tt_content" as="images">
+					<f:for each="{images}" as="image" iteration="iteration">
+						<flux:grid.row>
+							<flux:grid.column>
+								<flux:form.content name="content{image.checksum}" label="Caption, {image.name}" />
+							</flux:grid.column>
+						</flux:grid.row>
+					</f:for>
+				</v:resource.record.fal>
+			</flux:grid>
+		</f:if>
+	</flux:form>
+</f:section>
+
+<f:section name="Preview">
+	<v:resource.record.fal record="{record}" field="image" table="tt_content" as="images">
+		<f:for each="{images}" as="image" iteration="iteration">
+			<v:media.image src="{image.url}" treatIdAsReference="TRUE" alt="{image.id}" height="50" />
+		</f:for>
+	</v:resource.record.fal>
+	<flux:widget.grid />
+</f:section>
+
+<f:section name="Main">
+    <!-- Render your images here according to your liking! -->
+	<v:resource.record.fal record="{record}" field="image" table="tt_content" as="images">
+		<f:for each="{images}" as="image" iteration="iteration">
+			<fcc:tag name="{settings.caption.tagName}">
+				<f:render partial="Content/Image" arguments="{_all}" />
+				<flux:content.render area="content{image.checksum}" />
+			</fcc:tag>
+		</f:for>
+	</v:resource.record.fal>
+</f:section>
+
+</div>
 ```
 
 This would make a total of two variants of the `text` and `image` `CType` content elements: The always-present, first option called "Standard" which means "no thanks, just the default type in whichever template path the site TS has configured, please", and your newly added variant - which will be identified by the extension key to which it belongs.
@@ -106,19 +176,85 @@ $GLOBALS['TYPO3_CONF_VARS']['FluidTYPO3.FluidcontentCore']['variants']['text'][]
 
 ```xml
 <!-- EXT:myextensionkey/Resource/Private/Templates/CoreContent/Text.html -->
-The basic version: {record.bodytext}
+<div xmlns:flux="http://typo3.org/ns/FluidTYPO3/Flux/ViewHelpers" flux:schemaLocation="http://fluidtypo3.org/schemas/flux-development.xsd"
+     xmlns:fcc="http://typo3.org/ns/FluidTYPO3/FluidcontentCore/ViewHelpers" fcc:schemaLocation="http://fluidtypo3.org/schemas/fluidcontent_core-development.xsd"
+     xmlns:v="http://typo3.org/ns/FluidTYPO3/Vhs/ViewHelpers" v:schemaLocation="http://fluidtypo3.org/schemas/vhs-development.xsd"
+     xmlns:f="http://typo3.org/ns/fluid/ViewHelpers" f:schemaLocation="http://fluidtypo3.org/schemas/fluid-master.xsd">
+
+<f:layout name="Default" />
+
+<f:section name="Configuration">
+	<flux:form id="text">
+		<f:render partial="Properties/Header" arguments="{_all}" />
+		<f:render partial="Properties/Container" arguments="{_all}" />
+	</flux:form>
+</f:section>
+
+<f:section name="Preview">
+	{record.bodytext -> f:format.crop(maxCharacters: 100)}
+</f:section>
+
+<f:section name="Main">
+	{record.bodytext}
+</f:section>
+
+</div>
 ```
 
 Then, to provide more versions of the "text" content element:
 
 ```xml
 <!-- EXT:myextensionkey/Resource/Private/Templates/CoreContent/Text/Truncated.html -->
-The shortened version: {record.bodytext -> f:format.crop(maxCharacters: 100)}
+<div xmlns:flux="http://typo3.org/ns/FluidTYPO3/Flux/ViewHelpers" flux:schemaLocation="http://fluidtypo3.org/schemas/flux-development.xsd"
+     xmlns:fcc="http://typo3.org/ns/FluidTYPO3/FluidcontentCore/ViewHelpers" fcc:schemaLocation="http://fluidtypo3.org/schemas/fluidcontent_core-development.xsd"
+     xmlns:v="http://typo3.org/ns/FluidTYPO3/Vhs/ViewHelpers" v:schemaLocation="http://fluidtypo3.org/schemas/vhs-development.xsd"
+     xmlns:f="http://typo3.org/ns/fluid/ViewHelpers" f:schemaLocation="http://fluidtypo3.org/schemas/fluid-master.xsd">
+
+<f:layout name="Default" />
+
+<f:section name="Configuration">
+	<flux:form id="text">
+		<f:render partial="Properties/Header" arguments="{_all}" />
+		<f:render partial="Properties/Container" arguments="{_all}" />
+	</flux:form>
+</f:section>
+
+<f:section name="Preview">
+	{record.bodytext -> f:format.crop(maxCharacters: 100)}
+</f:section>
+
+<f:section name="Main">
+	The shortened version: {record.bodytext -> f:format.crop(maxCharacters: 100)}
+</f:section>
+
+</div>
 ```
 
 ```xml
 <!-- EXT:myextensionkey/Resource/Private/Templates/CoreContent/Text/Raw.html -->
-The raw version: {record.bodytext -> f:format.raw()}
+<div xmlns:flux="http://typo3.org/ns/FluidTYPO3/Flux/ViewHelpers" flux:schemaLocation="http://fluidtypo3.org/schemas/flux-development.xsd"
+      xmlns:fcc="http://typo3.org/ns/FluidTYPO3/FluidcontentCore/ViewHelpers" fcc:schemaLocation="http://fluidtypo3.org/schemas/fluidcontent_core-development.xsd"
+      xmlns:v="http://typo3.org/ns/FluidTYPO3/Vhs/ViewHelpers" v:schemaLocation="http://fluidtypo3.org/schemas/vhs-development.xsd"
+      xmlns:f="http://typo3.org/ns/fluid/ViewHelpers" f:schemaLocation="http://fluidtypo3.org/schemas/fluid-master.xsd">
+ 
+ <f:layout name="Default" />
+ 
+ <f:section name="Configuration">
+ 	<flux:form id="text">
+ 		<f:render partial="Properties/Header" arguments="{_all}" />
+ 		<f:render partial="Properties/Container" arguments="{_all}" />
+ 	</flux:form>
+ </f:section>
+ 
+ <f:section name="Preview">
+ 	{record.bodytext -> f:format.crop(maxCharacters: 100)}
+ </f:section>
+ 
+ <f:section name="Main">
+ 	The raw version: {record.bodytext -> f:format.raw()}
+ </f:section>
+ 
+ </div>
 ```
 
 And so on. These are of course very basic examples - the point of this is not to document every possible use case, the point is to inspire you to use these concepts to reach your specific goal. Remember: you can even place Flux form fields into Partial templates and simply render those from all versions, to make versions share one or more Flux form fields. The same is possible with Flux form sheets etc.
